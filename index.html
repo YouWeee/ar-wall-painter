@@ -11,7 +11,7 @@
                    connect-src 'self' https: wss: blob:;
                    img-src 'self' https: data: blob:;">
 </head>
-<body>
+<body style="margin: 0; overflow: hidden;">
     <div id="colorPicker">
         <div class="color-section">
             <select id="materialType">
@@ -100,29 +100,25 @@
 
     <a-scene embedded 
         arjs="sourceType: webcam; 
-              sourceWidth: 1280; 
-              sourceHeight: 960; 
-              displayWidth: 1280; 
-              displayHeight: 960; 
               debugUIEnabled: false;
-              maxDetectionRate: 60;
+              detectionMode: mono;
+              maxDetectionRate: 30;
               canvasWidth: window.innerWidth;
               canvasHeight: window.innerHeight;
-              patternRatio: 0.75;
-              detectionMode: mono_and_matrix;
-              cameraParametersUrl: https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/data/camera_para.dat;">
+              patternRatio: 0.8;">
 
-        <a-marker-camera preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.05" smoothThreshold="5">
+        <!-- Marker -->
+        <a-marker preset="hiro" smooth="true" smoothCount="5">
             <a-entity id="wall" 
-                      geometry="primitive: plane; width: 2; height: 2;"
+                      geometry="primitive: plane; width: 1; height: 1;"
                       material="color: #ffffff; shader: flat;"
                       position="0 0 0"
                       rotation="-90 0 0">
             </a-entity>
-        </a-marker-camera>
+        </a-marker>
 
-        <!-- Add a camera entity with adjusted settings -->
-        <a-entity camera="zoom: 0.5; fov: 80"></a-entity>
+        <!-- Camera -->
+        <a-entity camera></a-entity>
     </a-scene>
 
     <style>
@@ -629,6 +625,26 @@
                 this.sizeIndicator.textContent = `Wall Size: ${size}m × ${size}m`;
                 this.sizeIndicator.style.opacity = '1';
             }
+        });
+
+        // Add loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.style.position = 'fixed';
+        loadingDiv.style.top = '50%';
+        loadingDiv.style.left = '50%';
+        loadingDiv.style.transform = 'translate(-50%, -50%)';
+        loadingDiv.style.background = 'rgba(0,0,0,0.7)';
+        loadingDiv.style.color = 'white';
+        loadingDiv.style.padding = '20px';
+        loadingDiv.style.borderRadius = '10px';
+        loadingDiv.style.zIndex = '9999';
+        loadingDiv.innerHTML = 'Looking for Hiro marker...';
+        document.body.appendChild(loadingDiv);
+
+        // Hide loading when marker is found
+        const marker = document.querySelector('a-marker');
+        marker.addEventListener('markerFound', () => {
+            loadingDiv.style.display = 'none';
         });
     </script>
 
