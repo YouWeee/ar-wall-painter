@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR Wall Painter Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; 
+                   connect-src 'self' https: wss: blob:;
+                   img-src 'self' https: data: blob:;">
+</head>
+<body>
+    <div id="colorPicker">
+        <div class="color-section">
+            <select id="materialType">
+                <option value="glossy">Glossy Paint</option>
+                <option value="matte">Matte Paint</option>
+            </select>
+            <button id="applyColor">Apply Paint</button>
+        </div>
+        <div class="preset-colors">
+            <button class="color-preset" data-color="#FFFFFF" style="background: #FFFFFF">Wht</button>
+            <button class="color-preset" data-color="#E8DCD5" style="background: #E8DCD5">Bei</button>
+            <button class="color-preset" data-color="#C2C2C2" style="background: #C2C2C2">Gry</button>
+            <button class="color-preset" data-color="#A7CEDB" style="background: #A7CEDB">Blu</button>
+            <button class="color-preset" data-color="#B8D8BE" style="background: #B8D8BE">Sage</button>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="control-section">
+            <h3>Move Wall</h3>
+            <div class="movement-controls">
+                <div class="move-row">
+                    <button id="moveForward">↑</button>
+                </div>
+                <div class="move-row">
+                    <button id="moveLeft">←</button>
+                    <button id="moveRight">→</button>
+                </div>
+                <div class="move-row">
+                    <button id="moveBack">↓</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Rotate Wall</h3>
+            <div class="rotation-controls">
+                <div class="rotate-row">
+                    <button id="rotateUp">⟲</button>
+                </div>
+                <div class="rotate-row">
+                    <button id="rotateLeft">↺</button>
+                    <button id="rotateRight">↻</button>
+                </div>
+                <div class="rotate-row">
+                    <button id="rotateDown">⟳</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Area Size</h3>
+            <div class="control-group">
+                <button id="scaleUp">+</button>
+                <button id="scaleDown">−</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Paint Layers</h3>
+            <div class="control-group">
+                <button id="thicknessUp">↑</button>
+                <button id="thicknessDown">↓</button>
+            </div>
+            <div id="layerCount">1 Layer</div>
+        </div>
+
+        <div class="control-section">
+            <h3>Paint Opacity</h3>
+            <input type="range" id="opacitySlider" min="0" max="100" value="100">
+            <div id="opacityValue">100%</div>
+        </div>
+
+        <div class="control-section">
+            <h3>Texture</h3>
+            <select id="textureType">
+                <option value="smooth">Smooth</option>
+                <option value="rough">Rough</option>
+            </select>
+        </div>
+
+        <div class="paint-info">
+            <div id="coverage">Coverage: 100%</div>
+        </div>
+    </div>
+
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+        <a-marker-camera preset="hiro">
+            <a-entity id="wall" 
+                      geometry="primitive: plane; width: 2; height: 2;"
+                      material="color: #ffffff; shader: flat;"
+                      position="0 0 0"
+                      rotation="-90 0 0"
+                      gesture-handler="minScale: 0.25; maxScale: 5">
+            </a-entity>
+        </a-marker-camera>
+    </a-scene>
+
+    <style>
+        #colorPicker {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            width: 180px;
+        }
+
+        .color-section {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+
+        .preset-colors {
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-preset {
+            padding: 2px 4px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #controls {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 9999;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            width: 180px;
+        }
+
+        .control-section {
+            margin-bottom: 15px;
+        }
+
+        .control-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #controls button {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: #007bff;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        #materialType, #textureType {
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: 100%;
+        }
+
+        #applyColor {
+            padding: 4px 8px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #opacitySlider {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .paint-info {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .movement-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .move-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .movement-controls button {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: #007bff;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .movement-controls button:hover {
+            background: #0056b3;
+        }
+
+        .movement-controls button:active {
+            transform: scale(0.95);
+        }
+
+        .rotation-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .rotate-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .rotation-controls button {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: #007bff;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .rotation-controls button:hover {
+            background: #0056b3;
+        }
+
+        .rotation-controls button:active {
+            transform: scale(0.95);
+        }
+
+        .size-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 9999;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        /* Add visual feedback for pinch gesture */
+        .pinch-hint {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+    </style>
+
+    <script>
+        // Get all necessary elements
+        const coloredObject = document.querySelector('#coloredObject');
+        const materialType = document.getElementById('materialType');
+        const applyButton = document.getElementById('applyColor');
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
+        const textureType = document.getElementById('textureType');
+        const layerCount = document.getElementById('layerCount');
+        const coverage = document.getElementById('coverage');
+
+        // Initialize variables
+        let currentRotation = 0;
+        let currentScale = 2;
+        let currentColor = '#742525';
+        let layers = 1;
+        let currentX = 0;
+        let currentZ = 0;
+        const MOVE_DISTANCE = 0.2;
+
+        // Initialize rotation variables
+        let rotationX = 0;
+        let rotationY = 0;
+        const ROTATION_ANGLE = 15;
+
+        // Color preset buttons
+        document.querySelectorAll('.color-preset').forEach(button => {
+            button.addEventListener('click', () => {
+                currentColor = button.dataset.color;
+                updateWallMaterial();
+            });
+        });
+
+        // Apply button
+        applyButton.addEventListener('click', updateWallMaterial);
+
+        // Rotation controls
+        document.getElementById('rotateUp').addEventListener('click', () => {
+            rotationX -= ROTATION_ANGLE;
+            updateRotation();
+        });
+
+        document.getElementById('rotateDown').addEventListener('click', () => {
+            rotationX += ROTATION_ANGLE;
+            updateRotation();
+        });
+
+        document.getElementById('rotateLeft').addEventListener('click', () => {
+            rotationY -= ROTATION_ANGLE;
+            updateRotation();
+        });
+
+        document.getElementById('rotateRight').addEventListener('click', () => {
+            rotationY += ROTATION_ANGLE;
+            updateRotation();
+        });
+
+        // Scale controls
+        document.getElementById('scaleUp').addEventListener('click', () => {
+            currentScale = Math.min(currentScale + 0.2, 4);
+            coloredObject.setAttribute('scale', `${currentScale} ${currentScale} 0.1`);
+        });
+
+        document.getElementById('scaleDown').addEventListener('click', () => {
+            currentScale = Math.max(currentScale - 0.2, 1);
+            coloredObject.setAttribute('scale', `${currentScale} ${currentScale} 0.1`);
+        });
+
+        // Layer controls
+        document.getElementById('thicknessUp').addEventListener('click', () => {
+            layers = Math.min(layers + 1, 4);
+            layerCount.textContent = `${layers} Layer${layers > 1 ? 's' : ''}`;
+            updateCoverage();
+        });
+
+        document.getElementById('thicknessDown').addEventListener('click', () => {
+            layers = Math.max(layers - 1, 1);
+            layerCount.textContent = `${layers} Layer${layers > 1 ? 's' : ''}`;
+            updateCoverage();
+        });
+
+        // Opacity control
+        opacitySlider.addEventListener('input', () => {
+            const opacity = opacitySlider.value / 100;
+            opacityValue.textContent = `${opacitySlider.value}%`;
+            coloredObject.setAttribute('material', 'opacity', opacity);
+            updateCoverage();
+        });
+
+        // Texture control
+        textureType.addEventListener('change', () => {
+            updateWallMaterial();
+        });
+
+        // Movement controls
+        document.getElementById('moveForward').addEventListener('click', () => {
+            currentZ -= MOVE_DISTANCE;
+            updatePosition();
+        });
+
+        document.getElementById('moveBack').addEventListener('click', () => {
+            currentZ += MOVE_DISTANCE;
+            updatePosition();
+        });
+
+        document.getElementById('moveLeft').addEventListener('click', () => {
+            currentX -= MOVE_DISTANCE;
+            updatePosition();
+        });
+
+        document.getElementById('moveRight').addEventListener('click', () => {
+            currentX += MOVE_DISTANCE;
+            updatePosition();
+        });
+
+        function updateWallMaterial() {
+            const material = {
+                color: currentColor,
+                opacity: opacitySlider.value / 100,
+                metalness: materialType.value === 'glossy' ? 0.8 : 0.2,
+                roughness: textureType.value === 'rough' ? 0.8 : 0.2
+            };
+            coloredObject.setAttribute('material', material);
+        }
+
+        function updateCoverage() {
+            const coveragePercent = Math.min(layers * (opacitySlider.value / 100) * 100, 100);
+            coverage.textContent = `Coverage: ${Math.round(coveragePercent)}%`;
+        }
+
+        function updatePosition() {
+            coloredObject.setAttribute('position', {
+                x: currentX,
+                y: 1,  // Keep height constant
+                z: currentZ
+            });
+        }
+
+        function updateRotation() {
+            coloredObject.setAttribute('animation', {
+                property: 'rotation',
+                to: `${rotationX} ${rotationY} 0`,
+                dur: 500,
+                easing: 'easeInOutQuad'
+            });
+        }
+
+        // Enhanced color processing function with maximum brightness
+        function processColor(color, brightness, saturation) {
+            let r = parseInt(color.substr(1,2), 16);
+            let g = parseInt(color.substr(3,2), 16);
+            let b = parseInt(color.substr(5,2), 16);
+
+            // Increase base brightness
+            const baseBrightnessIncrease = 2.0; // Doubled base brightness
+            r = Math.min(255, Math.round(r * baseBrightnessIncrease));
+            g = Math.min(255, Math.round(g * baseBrightnessIncrease));
+            b = Math.min(255, Math.round(b * baseBrightnessIncrease));
+
+            // Apply additional brightness from slider
+            const brightnessMultiplier = brightness / 100 * 1.5; // Increased multiplier
+            r = Math.min(255, Math.round(r * brightnessMultiplier));
+            g = Math.min(255, Math.round(g * brightnessMultiplier));
+            b = Math.min(255, Math.round(b * brightnessMultiplier));
+
+            // Enhance saturation
+            const saturationMultiplier = (saturation / 100) * 1.8; // Increased saturation
+            const gray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
+            r = Math.min(255, Math.round(gray + (r - gray) * saturationMultiplier));
+            g = Math.min(255, Math.round(gray + (g - gray) * saturationMultiplier));
+            b = Math.min(255, Math.round(gray + (b - gray) * saturationMultiplier));
+
+            // Boost colors further
+            r = Math.min(255, Math.round(r * 1.2));
+            g = Math.min(255, Math.round(g * 1.2));
+            b = Math.min(255, Math.round(b * 1.2));
+
+            // Convert back to hex with maximum brightness preservation
+            const toHex = (n) => {
+                const hex = Math.max(50, Math.min(255, n)).toString(16); // Minimum value of 50 for brightness
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        // Update wall color with enhanced brightness
+        function updateWallColor(color) {
+            const wall = document.getElementById('wall');
+            if (wall) {
+                wall.setAttribute('material', {
+                    color: color,
+                    shader: 'flat',
+                    opacity: 1.0,
+                    transparent: true,
+                    emissive: color,
+                    emissiveIntensity: 0.5 // Added emissive for extra brightness
+                });
+            }
+        }
+
+        // Initialize controls with maximum brightness
+        document.addEventListener('DOMContentLoaded', () => {
+            const colorSelect = document.getElementById('colorSelect');
+            const brightnessSlider = document.getElementById('brightnessSlider');
+            const saturationSlider = document.getElementById('saturationSlider');
+            const applyButton = document.getElementById('applyPaint');
+
+            // Set initial maximum values
+            brightnessSlider.value = 200; // Maximum brightness
+            saturationSlider.value = 200; // Maximum saturation
+
+            applyButton.addEventListener('click', () => {
+                const color = processColor(
+                    colorSelect.value,
+                    brightnessSlider.value,
+                    saturationSlider.value
+                );
+                updateWallColor(color);
+            });
+
+            // Add real-time preview
+            colorSelect.addEventListener('input', () => {
+                const color = processColor(
+                    colorSelect.value,
+                    brightnessSlider.value,
+                    saturationSlider.value
+                );
+                applyButton.style.backgroundColor = color;
+            });
+        });
+
+        // Gesture handler component for pinch scaling
+        AFRAME.registerComponent('gesture-handler', {
+            schema: {
+                minScale: { default: 0.25 },
+                maxScale: { default: 5 }
+            },
+
+            init: function() {
+                this.initialScale = { x: 1, y: 1, z: 1 };
+                this.scaleFactor = 1;
+                this.previousDistance = 0;
+                this.isVisible = false;
+
+                // Add touch event listeners
+                document.addEventListener('touchstart', this.onTouchStart.bind(this));
+                document.addEventListener('touchmove', this.onTouchMove.bind(this));
+                document.addEventListener('touchend', this.onTouchEnd.bind(this));
+
+                // Show size indicator
+                this.sizeIndicator = document.createElement('div');
+                this.sizeIndicator.className = 'size-indicator';
+                document.body.appendChild(this.sizeIndicator);
+            },
+
+            onTouchStart: function(event) {
+                if (event.touches.length === 2) {
+                    this.previousDistance = this.getTouchDistance(event.touches);
+                }
+            },
+
+            onTouchMove: function(event) {
+                if (event.touches.length === 2) {
+                    event.preventDefault();
+                    
+                    const currentDistance = this.getTouchDistance(event.touches);
+                    const deltaDistance = currentDistance - this.previousDistance;
+                    this.previousDistance = currentDistance;
+
+                    // Calculate new scale
+                    const scaleDelta = deltaDistance * 0.01;
+                    this.scaleFactor = Math.min(
+                        this.data.maxScale,
+                        Math.max(this.data.minScale, this.scaleFactor + scaleDelta)
+                    );
+
+                    // Apply scale
+                    this.el.object3D.scale.set(
+                        this.scaleFactor,
+                        this.scaleFactor,
+                        this.scaleFactor
+                    );
+
+                    // Update size indicator
+                    this.updateSizeIndicator();
+                }
+            },
+
+            onTouchEnd: function() {
+                this.previousDistance = 0;
+                setTimeout(() => {
+                    this.sizeIndicator.style.opacity = '0';
+                }, 1000);
+            },
+
+            getTouchDistance: function(touches) {
+                const dx = touches[0].pageX - touches[1].pageX;
+                const dy = touches[0].pageY - touches[1].pageY;
+                return Math.sqrt(dx * dx + dy * dy);
+            },
+
+            updateSizeIndicator: function() {
+                const size = (this.scaleFactor * 2).toFixed(1); // Base size is 2 units
+                this.sizeIndicator.textContent = `Wall Size: ${size}m × ${size}m`;
+                this.sizeIndicator.style.opacity = '1';
+            }
+        });
+    </script>
+
+    <!-- Add pinch gesture hint -->
+    <div class="pinch-hint">
+        ↔️ Pinch to resize wall
+    </div>
+</body>
+</html> 
