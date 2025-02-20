@@ -98,16 +98,31 @@
         </div>
     </div>
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
-        <a-marker-camera preset="hiro">
+    <a-scene embedded 
+        arjs="sourceType: webcam; 
+              sourceWidth: 1280; 
+              sourceHeight: 960; 
+              displayWidth: 1280; 
+              displayHeight: 960; 
+              debugUIEnabled: false;
+              maxDetectionRate: 60;
+              canvasWidth: window.innerWidth;
+              canvasHeight: window.innerHeight;
+              patternRatio: 0.75;
+              detectionMode: mono_and_matrix;
+              cameraParametersUrl: https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/data/camera_para.dat;">
+
+        <a-marker-camera preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.05" smoothThreshold="5">
             <a-entity id="wall" 
                       geometry="primitive: plane; width: 2; height: 2;"
                       material="color: #ffffff; shader: flat;"
                       position="0 0 0"
-                      rotation="-90 0 0"
-                      gesture-handler="minScale: 0.25; maxScale: 5">
+                      rotation="-90 0 0">
             </a-entity>
         </a-marker-camera>
+
+        <!-- Add a camera entity with adjusted settings -->
+        <a-entity camera="zoom: 0.5; fov: 80"></a-entity>
     </a-scene>
 
     <style>
